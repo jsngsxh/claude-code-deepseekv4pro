@@ -1,0 +1,203 @@
+# Claude Code 接入 DeepSeek V4 Pro 操作指南
+
+> 适用平台：Windows / macOS / Linux  
+> 预计耗时：15~30 分钟  
+> 核心思路：通过 CC-Switch 工具将 Claude Code 的后端 API 从 Anthropic 官方切换到 DeepSeek 的 Anthropic 兼容端点。
+
+---
+
+## 一、准备工作
+
+### 1.1 安装 Node.js
+
+Claude Code 基于 Node.js 运行，需先安装。
+
+- 下载地址：https://nodejs.org/zh-cn/download
+- 推荐版本：v24.15.0 LTS 或更高（视频演示环境为 v26.13.0）
+- macOS 用户也可通过 nvm 安装
+
+安装完成后，打开终端验证：
+
+```bash
+node -v    # 应输出版本号，如 v26.13.0
+npm -v     # 应输出版本号，如 11.6.2；若报错则尝试 npm.cmd -v
+```
+
+### 1.2 安装 Git（Windows 必须）
+
+- 下载地址：https://git-scm.com/install/windows
+- 推荐版本：2.54.0 或更高
+- macOS / Linux 通常系统已自带，终端输入 `git --version` 确认
+
+### 1.3 安装 VS Code（推荐）
+
+- 下载地址：https://code.visualstudio.com/
+- 后续可安装 Claude Code 官方插件，获得更好的交互体验
+
+---
+
+## 二、获取 DeepSeek API Key
+
+1. 打开浏览器访问 **https://platform.deepseek.com**
+2. 注册账号并登录（支持手机号/邮箱）
+3. 进入控制台 → **API Keys** 页面
+4. 点击「创建 API Key」，复制并妥善保存
+
+> DeepSeek 提供兼容 Anthropic API 格式的专用端点：  
+> `https://api.deepseek.com/anthropic`
+
+---
+
+## 三、安装 CC-Switch（核心步骤）
+
+CC-Switch 是一款跨平台桌面应用，用于在多款 AI 编程工具中统一管理和切换后端 API 供应商，无需手动设置环境变量。
+
+### 3.1 下载
+
+- GitHub 仓库：https://github.com/farion1231/cc-switch
+- 进入 [Releases](https://github.com/farion1231/cc-switch/releases) 页面
+- 选择最新版本（视频演示为 v3.14.1），下载对应系统安装包：
+
+| 平台 | 推荐安装包 |
+|------|-----------|
+| Windows | `CC-Switch-v3.14.1-Windows.msi` 或 `Windows-Portable.zip` |
+| macOS | `CC-Switch-v3.14.1-macOS.dmg` |
+| Linux | `CC-Switch-v3.14.1-Linux-x86_64.AppImage` 或 `.deb` |
+
+### 3.2 安装
+
+- **Windows**：双击 `.msi` 文件，按向导完成安装
+- **macOS**：双击 `.dmg` 文件，将应用拖入 Applications 文件夹
+- **Linux**：`.AppImage` 文件需先赋予执行权限 `chmod +x` 后运行
+
+---
+
+## 四、配置 DeepSeek 后端
+
+### 4.1 打开 CC-Switch
+
+启动 CC-Switch 桌面应用，界面中可看到当前支持的所有 AI Agent 工具列表，包括 Claude Code、GitHub Copilot、OpenCode 等。
+
+### 4.2 选择 DeepSeek 供应商
+
+在供应商列表中找到 **DeepSeek**，点击进入配置页。
+
+### 4.3 填入配置信息
+
+在 DeepSeek 配置页中设置以下内容：
+
+| 配置项                 | 值                                    |
+| ------------------- | ------------------------------------ |
+| Base URL（Anthropic） | `https://api.deepseek.com/anthropic` |
+| API Key             | 粘贴第二步获取的 DeepSeek API Key            |
+
+### 4.4 模型映射（推荐）
+
+为确保 Claude Code 的各个子模型正确路由到 DeepSeek，建议配置以下模型映射：
+
+| Claude 角色       | 映射到 DeepSeek 模型       |
+| --------------- | --------------------- |
+| Opus（旗舰模型，主力推理） | `deepseek-v4-pro[1m]` |
+| Sonnet（中等模型）    | `deepseek-v4-pro[1m]` |
+| Haiku（轻量模型，子任务） | `deepseek-v4-flash`   |
+
+CC-Switch 会自动将这些映射转换为对应的环境变量。
+
+---
+
+## 五、安装 Claude Code
+
+### 5.1 全局安装
+
+```bash
+npm install -g @anthropic-ai/claude-code
+```
+
+### 5.2 验证安装
+
+```bash
+claude --version
+# 输出示例：2.1.17 (Claude Code)
+```
+
+### 5.3 启动 Claude Code
+
+在 CC-Switch 中确认 DeepSeek 配置已生效后，在终端项目目录中运行：
+
+```bash
+claude
+```
+
+即可在 Claude Code 中使用 DeepSeek V4 Pro 作为后端模型。
+
+---
+
+## 六、VS Code 集成（可选）
+
+1. 打开 VS Code → 扩展商店（Ctrl+Shift+X）
+2. 搜索 **"Claude Code for VS Code"**（Anthropic 官方出品）
+3. 点击安装
+4. 如需中文界面，可搜索安装 **"Chinese (Simplified) Language Pack"**
+
+安装后，在 VS Code 中即可直接调用 Claude Code，后端同样走 CC-Switch 配置的 DeepSeek。
+
+---
+
+## 七、锁定稳定版本与关闭自动更新
+
+### 7.1 安装 Claude Code 最稳定版本
+
+为避免自动更新引入不兼容变更，建议锁定到经过验证的稳定版本 `2.1.150`：
+
+```bash
+npm install -g @anthropic-ai/claude-code@2.1.150
+```
+
+安装完成后验证：
+
+```bash
+claude --version
+# 应输出：2.1.150 (Claude Code)
+```
+
+### 7.2 关闭 CC-Switch 自动更新
+
+在 CC-Switch 的 DeepSeek 配置页中，找到自动更新相关选项并将其**关闭**，防止 Claude Code 自动升级到未经验证的新版本，确保环境长期稳定运行。
+
+---
+
+## 八、可用模型一览
+
+DeepSeek 平台提供的 Anthropic 兼容端点支持以下模型：
+
+| 模型名称 | 用途 | 说明 |
+|----------|------|------|
+| `deepseek-v4-pro[1m]` | 主力推理 | 1M 上下文，推荐作为 Opus/Sonnet 替代 |
+| `deepseek-v4-flash` | 轻量任务 | 速度快、成本低，适合子代理和简单任务 |
+| `DeepSeek-V3.2` | 经典模型 | 上一代稳定版本，也可作为 Haiku 替代 |
+
+---
+
+## 九、常见问题
+
+**Q：CC-Switch 启动后 Claude Code 仍是原版 Anthropic？**  
+A：检查 CC-Switch 中 DeepSeek 是否已设为当前激活的供应商，部分版本需要点击「应用」或「切换」按钮。
+
+**Q：提示 API Key 无效？**  
+A：确认 Key 完整复制（以 `sk-` 开头），且在 DeepSeek 平台中状态为「有效」。
+
+**Q：macOS 提示应用无法打开（不受信任的开发者）？**  
+A：进入「系统设置 → 隐私与安全性」，点击「仍要打开」。
+
+**Q：如何验证当前使用的是 DeepSeek 而非 Anthropic？**  
+A：在 Claude Code 对话中提问「你是什么模型」，会返回 deepseek 相关模型信息；或观察 API 调用日志/费用账单。
+
+---
+
+## 十、参考链接
+
+- DeepSeek 平台：https://platform.deepseek.com
+- CC-Switch 仓库：https://github.com/farion1231/cc-switch
+- Claude Code 官方：https://www.anthropic.com/claude-code
+- Node.js 下载：https://nodejs.org
+- VS Code 下载：https://code.visualstudio.com
